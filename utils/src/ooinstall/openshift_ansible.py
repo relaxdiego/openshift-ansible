@@ -14,7 +14,8 @@ CFG = None
 ROLES_TO_GROUPS_MAP = {
     'master': 'masters',
     'node': 'nodes',
-    'storage': 'nfs'
+    'storage': 'nfs',
+    'master_lb': ''
 }
 
 VARIABLES_MAP = {
@@ -48,11 +49,6 @@ def generate_inventory(hosts):
     write_inventory_children(base_inventory, multiple_masters, proxy, scaleup)
 
     write_inventory_vars(base_inventory, multiple_masters, proxy)
-
-    # Find the correct deployment type for ansible:
-    ver = find_variant(CFG.settings['variant'],
-        version=CFG.settings.get('variant_version', None))[1]
-    base_inventory.write('deployment_type={}\n'.format(ver.ansible_key))
 
     if 'OO_INSTALL_ADDITIONAL_REGISTRIES' in os.environ:
         base_inventory.write('openshift_docker_additional_registries={}\n'
@@ -161,6 +157,11 @@ def write_inventory_vars(base_inventory, multiple_masters, proxy):
         base_inventory.write('openshift_image_tag=v{}\n'.format('3.1.1.6'))
 
     write_proxy_settings(base_inventory)
+
+    # Find the correct deployment type for ansible:
+    ver = find_variant(CFG.settings['variant'],
+        version=CFG.settings.get('variant_version', None))[1]
+    base_inventory.write('deployment_type={}\n'.format(ver.ansible_key))
 
     for name, role_obj in CFG.deployment.roles.iteritems():
         if role_obj.variables:
